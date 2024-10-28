@@ -41,13 +41,9 @@ except FileNotFoundError:
 
 class HousePredictionInput(BaseModel):
     rooms: float
-    distance: float
     bathroom: float
     car: float
     landsize: float
-    building_area: float
-    propertycount: float
-    age: float
     suburb_encoded: int
 
 class HousePredictionOutput(BaseModel):
@@ -102,18 +98,15 @@ async def predict_price(
         )
 
     try:
-        # Convert input data to pandas DataFrame with correct column names
         features = pd.DataFrame([[
             input_data.rooms,
-            input_data.distance,
             input_data.bathroom,
             input_data.car,
             input_data.landsize,
             input_data.suburb_encoded
-        ]], columns=['Rooms', 'Distance', 'Bathroom', 'Car', 'Landsize', 'Suburb_Encoded'])
+        ]], columns=['Rooms', 'Bathroom', 'Car', 'Landsize', 'Suburb_Encoded'])
         
         prediction = model.predict(features)[0]
-        
         formatted_prediction = round(float(prediction), 2)
         
         return {"predicted_price": formatted_prediction}

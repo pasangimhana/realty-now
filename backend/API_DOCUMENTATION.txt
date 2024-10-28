@@ -29,7 +29,6 @@ Endpoints
    Content-Type: application/json
    {
        "rooms": float,
-       "distance": float,
        "bathroom": float,
        "car": float,
        "landsize": float,
@@ -43,17 +42,15 @@ Model Feature Coefficients
 -------------------------
 These coefficients show the impact of each feature on the house price:
 
-Rooms:           +$132,085 per room
-Distance:        -$28,450 per km from CBD
-Bathroom:        +$251,927 per bathroom
-Car:            +$49,236 per car space
-Landsize:        +$25 per square meter
-Suburb_Encoded:  -$612 per suburb code unit
+Rooms:           +$212,258 per room
+Bathroom:        +$265,412 per bathroom
+Car:             -$7,041 per car space
+Landsize:        +$12 per square meter
+Suburb_Encoded:  -$787 per suburb code unit
 
 Notes
 -----
 - All prices are in AUD
-- Distance is measured in kilometers from CBD
-- Landsize are in square meters
+- Landsize is in square meters
 - Suburb_encoded should be obtained from the provided encoding map
 - Token expires after 30 minutes
