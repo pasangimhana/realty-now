@@ -1,0 +1,65 @@
+RealtyNow Housing Price Prediction API
+=====================================
+
+Base URL: http://localhost:8000
+
+Authentication
+-------------
+The API uses JWT Bearer token authentication. You must first register and obtain a token.
+
+Endpoints
+---------
+
+1. Register User
+   POST /register
+   Content-Type: application/json
+   {
+       "email": "user@example.com",
+       "password": "yourpassword"
+   }
+
+2. Login (Get Token)
+   POST /token
+   Content-Type: application/x-www-form-urlencoded
+   username=user@example.com&password=yourpassword
+
+3. Predict House Price
+   POST /predict
+   Authorization: Bearer <your_token>
+   Content-Type: application/json
+   {
+       "rooms": float,
+       "distance": float,
+       "bathroom": float,
+       "car": float,
+       "landsize": float,
+       "building_area": float,
+       "propertycount": float,
+       "age": float,
+       "suburb_encoded": int
+   }
+
+4. Health Check
+   GET /health
+
+Model Feature Coefficients
+-------------------------
+These coefficients show the impact of each feature on the house price:
+
+Rooms:           +$132,085 per room
+Distance:        -$28,450 per km from CBD
+Bathroom:        +$251,927 per bathroom
+Car:            +$49,236 per car space
+Landsize:        +$25 per square meter
+BuildingArea:    +$2,135 per square meter
+Propertycount:   +$0.25 per property in area
+Age:            +$5,438 per year
+Suburb_Encoded:  -$612 per suburb code unit
+
+Notes
+-----
+- All prices are in AUD
+- Distance is measured in kilometers from CBD
+- Landsize and BuildingArea are in square meters
+- Suburb_encoded should be obtained from the provided encoding map
+- Token expires after 30 minutes
