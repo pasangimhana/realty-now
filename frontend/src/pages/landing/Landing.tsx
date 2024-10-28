@@ -15,6 +15,8 @@ import ShadowBox1 from '../../components/shadowBox/box1'
 import ShadowBox2 from '../../components/shadowBox/box2'
 import { Link, NavLink } from 'react-router-dom'
 import { popularLocations } from '../../dummyData'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../store/store'
 
 interface CardData {
     title: string
@@ -103,6 +105,8 @@ const recentNews: RecentNews[] | null = [
 
 const Landing = () => {
     const theme = useTheme()
+    // Add this line to get auth state
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth)
 
     return (
         <>

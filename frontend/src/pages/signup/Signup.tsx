@@ -5,43 +5,80 @@ import signUpCover from '../../assets/images/login_cover.png'
 import GoogleIcon from '@mui/icons-material/Google'
 import logoImage from '../../assets/images/logo.png'
 
-
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice' // Adjust the import path as needed
 const Signup = () => {
-    const classes = useStyles()
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-    const [isChecked, setIsChecked] = useState(false)
-
+    const classes = useStyles();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const [isChecked, setIsChecked] = useState(false);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+  
     const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setIsChecked(event.target.checked)
-    }
-
+      setIsChecked(event.target.checked);
+    };
+  
     const formik = useFormik({
-        initialValues: {
-            username: "",
-            email: '',
-            password: "",
-            confirmPassword: ""
-        },
-        validationSchema: Yup.object({
-            username: Yup.string().required('Required'),
-            password: Yup.string().required('Required'),
-            email: Yup.string()
-                .email("Invalid email format")
-                .required("Email is required"),
-            confirmPassword: Yup.string()
-                .oneOf([Yup.ref('password')], 'Passwords must match')
-                .required('Required')
-        }),
-        onSubmit: (values) => {
-            console.log(values)
+      initialValues: {
+        email: '',
+        password: '',
+        confirmPassword: '',
+      },
+      validationSchema: Yup.object({
+        email: Yup.string().email('Invalid email format').required('Email is required'),
+        password: Yup.string().required('Required'),
+        confirmPassword: Yup.string()
+          .oneOf([Yup.ref('password')], 'Passwords must match')
+          .required('Required'),
+      }),
+      onSubmit: async (values, { setSubmitting, setFieldError }) => {
+        dispatch(loginStart()); // Dispatch the loginStart action
+        try {
+          console.log('Attempting registration...');
+          await axios.post('http://localhost:8000/register', {
+            email: values.email,
+            password: values.password,
+          });
+  
+          console.log('Registration successful, attempting login...');
+          const response = await axios.post(
+            'http://localhost:8000/token',
+            new URLSearchParams({
+              username: values.email,
+              password: values.password,
+            }),
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+            }
+          );
+  
+          const token = response.data.access_token;
+          console.log('Login successful, token received');
+  
+          // Update both localStorage and Redux state
+          localStorage.setItem('token', token);
+          dispatch(loginSuccess(token)); // Dispatch the loginSuccess action
+  
+          console.log('Redirecting to home page...');
+          navigate('/');
+        } catch (error: any) {
+          console.error('Registration/Login error:', error);
+          dispatch(loginFailure(error.response?.data?.detail || 'Registration failed. Please try again.')); // Dispatch the loginFailure action
+          setFieldError('email', error.response?.data?.detail || 'Registration failed. Please try again.');
+        } finally {
+          setSubmitting(false);
         }
-    })
+      },
+    });
 
     return (
         <>
@@ -63,15 +100,6 @@ const Signup = () => {
                                 </Typography>
                                 <form onSubmit={formik.handleSubmit}>
                                     <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12, md: 12 }} >
-                                            <TextField
-                                                error={Boolean(formik.touched.username && formik.errors.username)}
-                                                helperText={formik.errors.username}
-                                                placeholder="User Name"
-                                                variant="outlined"
-                                                fullWidth
-                                                {...formik.getFieldProps('username')} />
-                                        </Grid>
                                         <Grid size={{ xs: 12, md: 12 }} >
                                             <TextField
                                                 error={Boolean(formik.touched.email && formik.errors.email)}
@@ -134,7 +162,7 @@ const Signup = () => {
                                                     disabled={!isChecked}
                                                     fullWidth
                                                 >
-                                                    Sign in
+                                                    Sign up
                                                 </Button>
                                                 <Button
                                                     variant="contained"
@@ -149,7 +177,7 @@ const Signup = () => {
                                                         textTransform: "none"
                                                     }}
                                                 >
-                                                    Sing-in with Google
+                                                    Sign up with Google
                                                 </Button>
                                             </Stack>
                                         </Grid>
@@ -162,7 +190,7 @@ const Signup = () => {
                         </Card>
                     </Grid>
                 </Grid>
-            </Grid >
+            </Grid>
         </>
     )
 }

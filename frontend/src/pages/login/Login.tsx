@@ -8,25 +8,59 @@ import GoogleIcon from '@mui/icons-material/Google'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { Link } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice'
+import { useNavigate } from 'react-router-dom'
+import { RootState } from '../../store/store'
+
 
 const Login = () => {
-    const classes = useStyles()
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-
+    const classes = useStyles();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { loading, error } = useSelector((state: RootState) => state.auth);
+  
     const formik = useFormik({
-        initialValues: {
-            username: "",
-            password: ""
-        },
-        validationSchema: Yup.object({
-            username: Yup.string().required('Required'),
-            password: Yup.string().required('Required')
-        }),
-        onSubmit: (values) => {
-            console.log(values)
+      initialValues: {
+        username: '',
+        password: '',
+      },
+      validationSchema: Yup.object({
+        username: Yup.string().email('Invalid email address').required('Required'),
+        password: Yup.string().required('Required'),
+      }),
+      onSubmit: async (values) => {
+        try {
+          dispatch(loginStart());
+          
+          const formData = new URLSearchParams();
+          formData.append('username', values.username);
+          formData.append('password', values.password);
+  
+          const response = await fetch('http://localhost:8000/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData,
+          });
+  
+          if (!response.ok) {
+            throw new Error('Invalid credentials');
+          }
+  
+          const data = await response.json();
+          localStorage.setItem('token', data.access_token); // Store token in local storage
+          dispatch(loginSuccess(data.access_token)); // Dispatch success action
+          navigate('/'); // Redirect to dashboard after successful login
+        } catch (error) {
+          dispatch(loginFailure(error instanceof Error ? error.message : 'Login failed')); // Dispatch failure action
         }
-    })
+      },
+    });
 
     return (
         <>
@@ -83,12 +117,17 @@ const Login = () => {
                                                         textTransform: "none"
                                                     }}
                                                 >
-                                                    Sing-in with Google
+                                                    Sign in with Google
                                                 </Button>
                                             </Stack>
                                         </Grid>
                                     </Grid>
                                 </form>
+                                {error && (
+                                    <Typography color="error" align="center" mt={2}>
+                                        {error}
+                                    </Typography>
+                                )}
                                 <Typography gutterBottom variant="body2" mt={1} align="center">
                                     Don't have an account? <Button variant='text' component={Link} to={'/signup'} sx={{ minWidth: "auto", paddingLeft: 0, marginLeft: 0.5 }}>Sign up</Button>
                                 </Typography>

@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import Login from './pages/login'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material'
+import { Provider } from 'react-redux'
+import { store } from './store/store'
 import theme from './theme'
 import Test from './pages/Test'
 import './index.css'
@@ -53,9 +55,11 @@ const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 )
 root.render(
-    <ThemeProvider theme={theme}>
-        <React.StrictMode>
-            <RouterProvider router={router} />
-        </React.StrictMode>
-    </ThemeProvider>
+    <Provider store={store}>
+        <ThemeProvider theme={theme}>
+            <React.StrictMode>
+                <RouterProvider router={router} />
+            </React.StrictMode>
+        </ThemeProvider>
+    </Provider>
 )

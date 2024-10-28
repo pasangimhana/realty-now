@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 import pickle
 import pandas as pd
-from typing import Annotated
+from typing import Annotated, List, Dict
 from pydantic import BaseModel
 from models.user import UserCreate, Token, User
 from models.database_models import Base
@@ -117,3 +117,68 @@ async def predict_price(
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# Add these new models
+class HistoricalPrice(BaseModel):
+    year: int
+    median_price: float
+
+class SuburbStats(BaseModel):
+    suburb: str
+    median_price: float
+    avg_rooms: float
+    avg_bathrooms: float
+
+# Add these new endpoints
+@app.get("/historical-prices", response_model=List[HistoricalPrice])
+async def get_historical_prices(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db)
+):
+    # Verify token first
+    token_data = await verify_token(token)
+    
+    # Load your historical data
+    try:
+        df = pd.read_csv('data/Melbourne_housing_FULL.csv')
+        df['Year'] = pd.to_datetime(df['Date'], format='%d/%m/%Y').dt.year
+        yearly_prices = df.groupby('Year')['Price'].median().reset_index()
+        
+        return [
+            HistoricalPrice(year=int(row['Year']), median_price=float(row['Price']))
+            for _, row in yearly_prices.iterrows()
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/suburb-stats", response_model=List[SuburbStats])
+async def get_suburb_stats(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db)
+):
+    # Verify token first
+    token_data = await verify_token(token)
+    
+    try:
+        df = pd.read_csv('data/Melbourne_housing_FULL.csv')
+        # Calculate statistics and handle NaN values
+        suburb_stats = df.groupby('Suburb').agg({
+            'Price': 'median',
+            'Rooms': 'mean',
+            'Bathroom': 'mean'
+        }).reset_index()
+        
+        # Drop rows with NaN values
+        suburb_stats = suburb_stats.dropna()
+        
+        return [
+            SuburbStats(
+                suburb=row['Suburb'],
+                median_price=float(row['Price']) if row['Price'] is not None else None,
+                avg_rooms=float(row['Rooms']) if row['Rooms'] is not None else None,
+                avg_bathrooms=float(row['Bathroom']) if row['Bathroom'] is not None else None
+            )
+            for _, row in suburb_stats.iterrows()
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
