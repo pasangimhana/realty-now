@@ -109,12 +109,8 @@ async def predict_price(
             input_data.bathroom,
             input_data.car,
             input_data.landsize,
-            input_data.building_area,
-            input_data.propertycount,
-            input_data.age,
             input_data.suburb_encoded
-        ]], columns=['Rooms', 'Distance', 'Bathroom', 'Car', 'Landsize', 
-                    'BuildingArea', 'Propertycount', 'Age', 'Suburb_Encoded'])
+        ]], columns=['Rooms', 'Distance', 'Bathroom', 'Car', 'Landsize', 'Suburb_Encoded'])
         
         prediction = model.predict(features)[0]
         
